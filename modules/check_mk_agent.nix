@@ -63,6 +63,7 @@ in
         User = "root";
         Group = "root";
         StandardInput = "socket";
+        StateDirectory = "check_mk_agent";  # creates /var/lib/check_mk_agent
       };
     };
 
