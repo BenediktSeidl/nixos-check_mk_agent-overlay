@@ -64,13 +64,13 @@ let
 in
 stdenv.mkDerivation rec {
   pname = "check_mk_agent";
-  version = "v2.0.0p16";
+  version = "v2.1.0p6";
 
   src = fetchFromGitHub {
     owner = "tribe29";
     repo = "checkmk";
     rev = version;
-    sha256 = "0xxw47ddr81g558qqal6dn2774pfzxr62lr2r6cj06ifgb8chslv";
+    sha256 = "1kzik7jpsilsidxvfz8vyaqr6lq0fg9794nmdczg4ypfmanfjrhm";
   };
 
   buildInputs = [ pkgs.makeWrapper python.pkgs.wrapPython ];
