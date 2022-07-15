@@ -85,12 +85,9 @@ stdenv.mkDerivation rec {
     install -m755 -D agents/mk-job "$out/bin/mk-job"
     wrapProgram "$out/bin/mk-job" \
       --prefix PATH : ${pkgs.lib.makeBinPath deps} \
-      --set-default MK_LIBDIR $out/usr/lib/mk-job \
-      --set-default MK_CONFDIR $out/etc/mk-job
     install -m755 -D agents/check_mk_agent.linux "$out/bin/check_mk_agent"
     wrapProgram "$out/bin/check_mk_agent" \
       --prefix PATH : ${lib.makeBinPath deps} \
-      --set-default MK_LIBDIR $out/usr/lib/check_mk_agent \
       --set-default MK_CONFDIR $out/etc/check_mk_agent
   '' + lib.concatStringsSep "\n" (map pluginInstallPhase pluginsToInstall) + ''
     patchShebangs $out/bin/
