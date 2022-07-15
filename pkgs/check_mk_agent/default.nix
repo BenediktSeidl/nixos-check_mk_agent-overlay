@@ -84,7 +84,7 @@ stdenv.mkDerivation rec {
     sed -i "s#/usr/bin/time#${pkgs.time}/bin/time#g" agents/mk-job
     install -m755 -D agents/mk-job "$out/bin/mk-job"
     wrapProgram "$out/bin/mk-job" \
-      --prefix PATH : ${pkgs.lib.makeBinPath deps} \
+      --prefix PATH : ${pkgs.lib.makeBinPath deps}
     install -m755 -D agents/check_mk_agent.linux "$out/bin/check_mk_agent"
     wrapProgram "$out/bin/check_mk_agent" \
       --prefix PATH : ${lib.makeBinPath deps} \
