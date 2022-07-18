@@ -52,24 +52,43 @@ in
     };
 
     systemd.services."check_mk_agent@" = {
-      # https://github.com/tribe29/checkmk/blob/v2.0.0p1/agents/cfg_examples/systemd/check_mk@.service
-      description = "checkmk agent";
+      # https://github.com/tribe29/checkmk/blob/2.1.0/agents/scripts/super-server/0_systemd/check-mk-agent%40.service
+      description = "Checkmk agent";
 
       requires = [ "check_mk_agent.socket" ];
+      environment.MK_RUN_ASYNC_PARTS = "false";
+      environment.MK_READ_REMOTE = "true";
 
       serviceConfig = {
         ExecStart = "-${cfg.package}/bin/check_mk_agent";
-        Type = "forking";
+        Type = "simple";
         User = "root";
-        Group = "root";
         StandardInput = "socket";
         StateDirectory = "check_mk_agent";  # creates /var/lib/check_mk_agent
       };
     };
 
+    systemd.services."check-mk-agent-async" = {
+      # https://github.com/tribe29/checkmk/blob/2.1.0/agents/scripts/super-server/0_systemd/check-mk-agent-async.service
+      description = "Checkmk agent - Asynchronous background tasks";
+
+      requires = [ "check_mk_agent.socket" ];
+      after = [ "network-online.target" ];
+      wants = [ "network-online.target" ];
+      wantedBy = [ "multi-user.target" ];
+
+      environment.MK_RUN_SYNC_PARTS = "false";
+      environment.MK_LOOP_INTERVAL = "60";
+      serviceConfig = {
+        ExecStart = "${cfg.package}/bin/check_mk_agent";
+        Type = "simple";
+        User = "root";
+      };
+    };
+
     systemd.sockets.check_mk_agent = {
-      # https://github.com/tribe29/checkmk/blob/v2.0.0p1/agents/cfg_examples/systemd/check_mk.socket
-      description = "checkmk agent socket";
+      # https://github.com/tribe29/checkmk/blob/2.1.0/agents/scripts/super-server/0_systemd/check-mk-agent.socket.fallback
+      description = "Checkmk Agent Socket";
       partOf = [ "check_mk_agent@.service" ];
       wantedBy = [ "sockets.target" ];
 
