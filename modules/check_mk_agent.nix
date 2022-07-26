@@ -86,23 +86,6 @@ in
       };
     };
 
-    systemd.services."cmk-agent-ctl-daemon" = {
-      # https://github.com/tribe29/checkmk/blob/2.1.0/agents/scripts/super-server/0_systemd/cmk-agent-ctl-daemon.service
-      description = "Checkmk agent controller daemon";
-
-      requires = [ "check_mk_agent.socket" ];
-      after = [ "network-online.target" ];
-      wants = [ "network-online.target" ];
-      wantedBy = [ "multi-user.target" ];
-
-      serviceConfig = {
-        ExecStart = "${cfg.package}/bin/cmk-agent-ctl daemon";
-        Type = "simple";
-        User = "root"; # cmk-agent
-        Restart = "on-failure";
-      };
-    };
-
     systemd.sockets.check_mk_agent = {
       # https://github.com/tribe29/checkmk/blob/2.1.0/agents/scripts/super-server/0_systemd/check-mk-agent.socket.fallback
       description = "Checkmk Agent Socket";
