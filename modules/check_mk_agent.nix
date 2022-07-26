@@ -43,6 +43,15 @@ in
           Whether to open the port in the firewall for the agent.
         '';
       };
+
+      user = mkOption {
+        type = with types; nullOr str;
+        default = "root";
+        description = ''
+          The agent user
+        '';
+        example = "s-quaivesaas";
+      };
     };
   };
 
@@ -62,7 +71,7 @@ in
       serviceConfig = {
         ExecStart = "-${cfg.package}/bin/check_mk_agent";
         Type = "simple";
-        User = "root";
+        User = cfg.user;
         StandardInput = "socket";
         StateDirectory = "check_mk_agent";  # creates /var/lib/check_mk_agent
       };
@@ -82,7 +91,7 @@ in
       serviceConfig = {
         ExecStart = "${cfg.package}/bin/check_mk_agent";
         Type = "simple";
-        User = "root";
+        User = cfg.user;
       };
     };
 
