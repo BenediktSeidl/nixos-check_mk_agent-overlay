@@ -1,0 +1,43 @@
+{
+  "nodes": {
+    "checkmk": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1644854683,
+        "narHash": "sha256-O124CJhL+xxVlJrehybukvjQ4ic7GruebKhYNBfrKOQ=",
+        "owner": "tribe29",
+        "repo": "checkmk",
+        "rev": "e8ccf22d68c18d875f9a3005cc273b45b7fa1549",
+        "type": "github"
+      },
+      "original": {
+        "owner": "tribe29",
+        "repo": "checkmk",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1669791787,
+        "narHash": "sha256-KBfoA2fOI5+wCrm7PR+j7jHqXeTkVRPQ0m5fcKchyuU=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "e76c78d20685a043d23f5f9e0ccd2203997f1fb1",
+        "type": "github"
+      },
+      "original": {
+        "id": "nixpkgs",
+        "ref": "nixos-unstable",
+        "type": "indirect"
+      }
+    },
+    "root": {
+      "inputs": {
+        "checkmk": "checkmk",
+        "nixpkgs": "nixpkgs"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
