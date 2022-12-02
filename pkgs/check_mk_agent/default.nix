@@ -7,6 +7,14 @@
 , enablePluginSmart ? false
 , enablePluginDocker ? false
 , localChecks ? [ ]
+, cmkaVersion ? "v2.1.0p6"
+, cmkaSrc ? fetchFromGitHub {
+    owner = "tribe29";
+    repo = "checkmk";
+    rev = cmkaVersion;
+    sha256 = "1kzik7jpsilsidxvfz8vyaqr6lq0fg9794nmdczg4ypfmanfjrhm";
+  }
+
 }:
 let
   deps = with pkgs; [
@@ -22,7 +30,7 @@ let
     ethtool
     gnused
     gawk
-    iproute
+    iproute2
     time
   ];
   python = pkgs.python38;
@@ -77,16 +85,10 @@ let
     '');
   pluginsToInstall = (lib.filter (plugin: plugin.enabled) plugins) ++ (map localChecksToPlugin localChecks);
 in
-stdenv.mkDerivation rec {
+stdenv.mkDerivation {
   pname = "check_mk_agent";
-  version = "v2.1.0p6";
-
-  src = fetchFromGitHub {
-    owner = "tribe29";
-    repo = "checkmk";
-    rev = version;
-    sha256 = "1kzik7jpsilsidxvfz8vyaqr6lq0fg9794nmdczg4ypfmanfjrhm";
-  };
+  src = cmkaSrc;
+  version = cmkaVersion;
 
   buildInputs = [ pkgs.makeWrapper python.pkgs.wrapPython ];
 
