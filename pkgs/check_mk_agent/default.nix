@@ -7,12 +7,12 @@
 , enablePluginSmart ? false
 , enablePluginDocker ? false
 , localChecks ? [ ]
-, cmkaVersion ? "v2.1.0p6"
+, cmkaVersion ? "v2.1.0p19"
 , cmkaSrc ? fetchFromGitHub {
     owner = "tribe29";
     repo = "checkmk";
     rev = cmkaVersion;
-    sha256 = "1kzik7jpsilsidxvfz8vyaqr6lq0fg9794nmdczg4ypfmanfjrhm";
+    sha256 = "sha256-/8vLRWIt3aG7538X+a8tqJUAcHqE1yKUJnvVZGmQr7I=";
   }
 
 }:
