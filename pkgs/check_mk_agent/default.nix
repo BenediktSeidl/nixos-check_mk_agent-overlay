@@ -2,8 +2,19 @@
 , lib
 , pkgs
 , fetchFromGitHub
+, writeShellScript
+, runtimeShell
 , enablePluginSmart ? false
 , enablePluginDocker ? false
+, localChecks ? [ ]
+, cmkaVersion ? "v2.1.0p19"
+, cmkaSrc ? fetchFromGitHub {
+    owner = "tribe29";
+    repo = "checkmk";
+    rev = cmkaVersion;
+    sha256 = "sha256-/8vLRWIt3aG7538X+a8tqJUAcHqE1yKUJnvVZGmQr7I=";
+  }
+
 }:
 let
   deps = with pkgs; [
@@ -19,7 +30,7 @@ let
     ethtool
     gnused
     gawk
-    iproute
+    iproute2
     time
   ];
   python = pkgs.python38;
@@ -28,21 +39,28 @@ let
     {
       name = "smart";
       enabled = enablePluginSmart;
+      type = "bash";
       deps = with pkgs; [ smartmontools which gawk gnugrep gnused ];
     }
     {
       name = "mk_docker.py";
       enabled = enablePluginDocker;
-      isPythonPlugin = true;
+      type = "python";
       pythonDeps = with pythonPackages; [ docker ];
     }
   ];
+  localChecksToPlugin = localCheck:
+    {
+      name = localCheck.name;
+      localCheck = writeShellScript "localcheck" ''
+        export PATH="${lib.makeBinPath localCheck.deps}:$PATH"
+        ${localCheck.script}
+      '';
+      type = "local";
+    };
   pluginInstallPhase = plugin:
-    let
-      isPythonPlugin = plugin ? isPythonPlugin && plugin.isPythonPlugin == true;
-    in
     ''
-    '' + (if isPythonPlugin then ''
+    '' + (if plugin.type == "python" then ''
       # we want to wrap only a sinlge python script, so we move the script
       # into it's own folder, wrap all scripts in that folder and create a symlink
       FOLDER_WRAPPED=$out/usr/lib/check_mk_agent/plugins/.${plugin.name}.wrapped
@@ -53,25 +71,24 @@ let
       ln -s \
         $FOLDER_WRAPPED/${plugin.name} \
         "$out/usr/lib/check_mk_agent/plugins/${lib.removeSuffix ".py" plugin.name}"
-    '' else ''
+    '' else if plugin.type == "bash" then ''
       install -m755 -D \
         agents/plugins/${plugin.name} \
         "$out/usr/lib/check_mk_agent/plugins/${plugin.name}"
       wrapProgram "$out/usr/lib/check_mk_agent/plugins/${plugin.name}" \
         --prefix PATH : ${lib.makeBinPath plugin.deps}
+    '' else ''
+      mkdir -p "$out/usr/lib/check_mk_agent/local/"
+      ln -s \
+        ${plugin.localCheck} \
+        "$out/usr/lib/check_mk_agent/local/${plugin.name}"
     '');
-  pluginsToInstall = (lib.filter (plugin: plugin.enabled) plugins);
+  pluginsToInstall = (lib.filter (plugin: plugin.enabled) plugins) ++ (map localChecksToPlugin localChecks);
 in
-stdenv.mkDerivation rec {
+stdenv.mkDerivation {
   pname = "check_mk_agent";
-  version = "v2.1.0p6";
-
-  src = fetchFromGitHub {
-    owner = "tribe29";
-    repo = "checkmk";
-    rev = version;
-    sha256 = "1kzik7jpsilsidxvfz8vyaqr6lq0fg9794nmdczg4ypfmanfjrhm";
-  };
+  src = cmkaSrc;
+  version = cmkaVersion;
 
   buildInputs = [ pkgs.makeWrapper python.pkgs.wrapPython ];
 
