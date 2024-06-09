@@ -78,3 +78,7 @@
 # ...
 }
 ```
+
+## Development
+
+Run flake tests with logging: `nix flake check -L`
