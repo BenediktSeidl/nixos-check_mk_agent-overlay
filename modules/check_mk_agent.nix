@@ -20,6 +20,12 @@ in
         default = pkgs.check_mk_agent;
       };
 
+      extraPackages = mkOption {
+        type = lib.types.listOf lib.types.package;
+        default = [ ];
+        description = "Extra packages to place on PATH when the agent is running.";
+      };
+
       port = mkOption {
         type = types.int;
         default = 6556;
@@ -67,6 +73,7 @@ in
       requires = [ "check_mk_agent.socket" ];
       environment.MK_RUN_ASYNC_PARTS = "false";
       environment.MK_READ_REMOTE = "true";
+      path = cfg.extraPackages;
 
       serviceConfig = {
         ExecStart = "-${cfg.package}/bin/check_mk_agent";
@@ -88,6 +95,8 @@ in
 
       environment.MK_RUN_SYNC_PARTS = "false";
       environment.MK_LOOP_INTERVAL = "60";
+      path = cfg.extraPackages;
+
       serviceConfig = {
         ExecStart = "${cfg.package}/bin/check_mk_agent";
         Type = "simple";
