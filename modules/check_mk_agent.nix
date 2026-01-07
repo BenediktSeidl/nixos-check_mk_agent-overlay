@@ -6,6 +6,17 @@ let
   callPackage = pkgs.lib.callPackageWith (pkgs);
   cfg = config.services.check_mk_agent;
   listenStream = (if cfg.bind != null then cfg.bind + ":" else "") + toString cfg.port;
+  baseExtraPackagesOptions = [
+    config.virtualisation.vswitch
+    config.services.multipath
+    config.services.chrony
+    config.virtualisation.virtualbox.host
+    config.services.postfix
+    config.services.varnish
+  ];
+  baseExtraPackages = lib.lists.concatMap (
+    opt: lib.lists.optional opt.enable opt.package
+  ) baseExtraPackagesOptions;
 in
 {
   options = {
@@ -18,6 +29,12 @@ in
       package = mkOption {
         type = lib.types.package;
         default = pkgs.check_mk_agent;
+      };
+
+      extraPackages = mkOption {
+        type = lib.types.listOf lib.types.package;
+        default = [ ];
+        description = "Extra packages to place on PATH when the agent is running.";
       };
 
       port = mkOption {
@@ -56,6 +73,21 @@ in
   };
 
   config = mkIf cfg.enable {
+    services.check_mk_agent.extraPackages =
+      (builtins.attrValues {
+        inherit (pkgs)
+          util-linux # for lsblk
+          procps
+          iproute2
+          ;
+      })
+      ++ (lib.lists.optional config.boot.zfs.enabled config.boot.zfs.package)
+      ++ (lib.lists.optional config.services.lvm.enable pkgs.lvm2)
+      ++ (lib.lists.optional config.services.nullmailer.enable pkgs.nullmailer)
+      ++ (lib.lists.optional config.services.haproxy.enable pkgs.socat)
+      ++ (lib.lists.optional config.services.ntp.enable pkgs.ntp)
+      ++ baseExtraPackages;
+
     networking.firewall = mkIf cfg.openFirewall {
       allowedTCPPorts = [ cfg.port ];
     };
@@ -67,6 +99,7 @@ in
       requires = [ "check_mk_agent.socket" ];
       environment.MK_RUN_ASYNC_PARTS = "false";
       environment.MK_READ_REMOTE = "true";
+      path = cfg.extraPackages;
 
       serviceConfig = {
         ExecStart = "-${cfg.package}/bin/check_mk_agent";
@@ -88,6 +121,8 @@ in
 
       environment.MK_RUN_SYNC_PARTS = "false";
       environment.MK_LOOP_INTERVAL = "60";
+      path = cfg.extraPackages;
+
       serviceConfig = {
         ExecStart = "${cfg.package}/bin/check_mk_agent";
         Type = "simple";
