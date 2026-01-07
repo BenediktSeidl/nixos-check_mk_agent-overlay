@@ -6,6 +6,17 @@ let
   callPackage = pkgs.lib.callPackageWith (pkgs);
   cfg = config.services.check_mk_agent;
   listenStream = (if cfg.bind != null then cfg.bind + ":" else "") + toString cfg.port;
+  baseExtraPackagesOptions = [
+    config.virtualisation.vswitch
+    config.services.multipath
+    config.services.chrony
+    config.virtualisation.virtualbox.host
+    config.services.postfix
+    config.services.varnish
+  ];
+  baseExtraPackages = lib.lists.concatMap (
+    opt: lib.lists.optional opt.enable opt.package
+  ) baseExtraPackagesOptions;
 in
 {
   options = {
@@ -62,6 +73,21 @@ in
   };
 
   config = mkIf cfg.enable {
+    services.check_mk_agent.extraPackages =
+      (builtins.attrValues {
+        inherit (pkgs)
+          util-linux # for lsblk
+          procps
+          iproute2
+          ;
+      })
+      ++ (lib.lists.optional config.boot.zfs.enabled config.boot.zfs.package)
+      ++ (lib.lists.optional config.services.lvm.enable pkgs.lvm2)
+      ++ (lib.lists.optional config.services.nullmailer.enable pkgs.nullmailer)
+      ++ (lib.lists.optional config.services.haproxy.enable pkgs.socat)
+      ++ (lib.lists.optional config.services.ntp.enable pkgs.ntp)
+      ++ baseExtraPackages;
+
     networking.firewall = mkIf cfg.openFirewall {
       allowedTCPPorts = [ cfg.port ];
     };
