@@ -13,11 +13,13 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
+        description = "Enable check_mk_agent";
       };
 
       package = mkOption {
         type = lib.types.package;
         default = pkgs.check_mk_agent;
+        description = "Package to use for check_mk_agent";
       };
 
       port = mkOption {
